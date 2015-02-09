@@ -9,6 +9,11 @@
 #include "MessageProcessor.h"
 #include "Message.h"
 
+
+int *ledPin;
+int counter = 0;
+char ledBlinkType = 0x02;
+Message *incommingMessage;
 //Class which handles all the raw Communication
 //Behandelt alle Netzwerkaktivitaeten, jedoch nur Primitive Datentypen also Bytes
 UdpService * updService;
@@ -21,7 +26,6 @@ MessageProcessor *messageProcessor;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Initialize");
   //UdpConnectionInfo Instance will be initialized, it holds the ip,port and Macaddress
   //UdpConnectionInfo Instance wird erzeugt, diese hält die ip,port und macadresse
   udpConnectionInfo = new UDPConnectionInfo();
@@ -35,6 +39,18 @@ void setup() {
   //MessageProcessor will be Initialized and takes the udpService pointer which is nessary!
  //MessageProcessort wird initialisiert und nimmt den Pointer des udpservices an, dieser ist umbedingt noetig sonst laeuft nichts! 
   messageProcessor = new MessageProcessor(updService);
+  
+  
+  ledPin = new int[3];
+  ledPin[0] = 3;
+  ledPin[1] = 5;
+  ledPin[2] = 6;
+  
+  pinMode(ledPin[0],OUTPUT);
+  pinMode(ledPin[1],OUTPUT);
+  pinMode(ledPin[2],OUTPUT);
+  
+  
 }
 
 void loop() {
@@ -47,7 +63,7 @@ void loop() {
   Ich Empfehle sehr stark keine Messages im Speicher zubehalten,
   eine Message kann relativ gross sein und damit den Arbeitsspeicher zum ueberlaufen bringen!
   */
-  Message incommingMessage = messageProcessor->ReceiveMessage();
+  incommingMessage = messageProcessor->ReceiveMessage();
   
   /*
   Every Message got an attribute 'isLegal', check it befor using the Message!
@@ -56,12 +72,18 @@ void loop() {
   den vorschriften entspricht oder nicht. Vorher pruefen sonst koennte es gewaltig knallen!
   */
   
-  
-  if(incommingMessage.isLegal == 0x01)
-  {
+  if(incommingMessage->isLegal == 0x01)
+  {  
+    if(incommingMessage->Type == 0x02)
+    {
+      
+       analogWrite(ledPin[0],(unsigned char) incommingMessage->Data[0]);
+       analogWrite(ledPin[1],(unsigned char) incommingMessage->Data[1]);
+       analogWrite(ledPin[2],(unsigned char) incommingMessage->Data[2]);
+       counter++;
+    }
     
-    
-    
+    /*
     Serial.println("Got a Legal Message");
     Serial.print("Startbyte is:");
     if(incommingMessage.StartByte == 0x01)
@@ -72,9 +94,23 @@ void loop() {
     Serial.println(incommingMessage.Type);
     Serial.print("DatabyteLength");
     Serial.println(sizeof(*incommingMessage.Data));
+    */
+  }else
+  {
+    
   }
+  Serial.print("Counter:");
+  Serial.println(counter);
+  Serial.println(freeRam ());
   
+}
 
+
+int freeRam ()
+{
+extern int __heap_start, *__brkval;
+int v;
+return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
 
 

@@ -5,11 +5,17 @@
 MessageProcessor::MessageProcessor(UdpService *udpService)
 {
   //Service to get Messages from Remote
+    char *emptyDataArray = new char[1];
+    emptyDataArray[0] = 0;
+    
    this->udpService = udpService; 
+   erMessage = new Message();
+   erMessage->isLegal = 0;
+   rMessage = new Message();
 }
 
 
-Message MessageProcessor::ReceiveMessage()
+Message * MessageProcessor::ReceiveMessage()
 {
   //Message
   //0 = startByte
@@ -17,29 +23,14 @@ Message MessageProcessor::ReceiveMessage()
   //2 = Length
   //3 = Data[]
   //4 = endbyte
-  
-  
-  char *emptyDataArray = new char[1];
-  emptyDataArray[0] = 0;
-  Message errorMessage(0,0,0,emptyDataArray,0,0);
-   char *receivedBytes = new char[25];
    
    this->udpService->GetBytes();
-   
+    
    if(udpService->packetBuffer[0] != startByte)
    {
       //Startbyte is not what we expected
-     return errorMessage; 
+     return erMessage; 
    }
-   int dataLength = my_atoi((const char *)udpService->packetBuffer[2]);
-   
-   if(udpService->packetBuffer[2] == 0x01)
-   {
-       Serial.println("Datalength is 1");
-   }
-   
-   Serial.print("Datalenght:");
-   Serial.println(dataLength);
    //as we now know how long the dataArray should be
    //we can easily find out if the Endbyte is right
    
@@ -47,33 +38,27 @@ Message MessageProcessor::ReceiveMessage()
    {
      //Endbyte is not what we expected,
      //that means the Message must be broken
-     Serial.println("Endbyte is broken");
-     return errorMessage;
+     
+     return erMessage;
    }
+   _length = (int)((unsigned char)udpService->packetBuffer[2]);
    
-   char *dataBytes = new char[dataLength];  
-   
+   char *dataBytes; 
+   char testBuffer[_length];
+   Serial.println("SetArray");
   //Store the DataBytes, which always begin at index 3
-  for(int i=3;i < udpService->packetBuffer[2];i++)
+  for(int i=0;i < _length;i++)
   {
-    dataBytes[i -3] = udpService->packetBuffer[i];
-  }
-  Serial.println("Returning Message");
-  return Message(startByte,udpService->packetBuffer[1],udpService->packetBuffer[2],dataBytes,endByte,1);
+    testBuffer[i] = udpService->packetBuffer[(i +3)];
+  }  
+  
+  dataBytes = testBuffer;
+  Serial.println("Returned");
+  rMessage->isLegal = 1;
+  rMessage->Length = udpService->packetBuffer[2];
+  rMessage->Type = udpService->packetBuffer[1];
+  rMessage->Data = dataBytes;
+  return rMessage;
 }
 
-int MessageProcessor::my_atoi(const char *s)
-{
- int sign=1;
- if(*s == '-')
-        sign = -1;
- s++;
- int num=0;
- while(*s)
-  {
-    num=((*s)-'0')+num*10;
-    s++;   
-  }
- return num*sign;
-}
 

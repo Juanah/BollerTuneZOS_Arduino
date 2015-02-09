@@ -16,11 +16,10 @@ class UdpService
     void Init(UDPConnectionInfo *connectionInfo);
     
     //Receive Methods
-    String GetStringData();
+    
     void GetBytes();
     
     //Send Methods
-    int SendString(String string,UDPClient *client);
     
     int SendBytes(char *bytes,UDPClient *client);
     char packetBuffer[UDP_TX_PACKET_MAX_SIZE];

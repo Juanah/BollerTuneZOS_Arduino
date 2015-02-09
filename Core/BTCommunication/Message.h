@@ -7,19 +7,16 @@ class Message
 {
   public:
     Message();
-    Message( char startbyte,char mLength,char type, char *data,char endbyte,char legal);
+    ~Message();
+    //Message(char startbyte,unsigned char mLength,unsigned char type, char *data,char endbyte,char legal);
     
     
-    //Data Methods
-    String DataToString();
-    int DataToInt();
-    float DataToFloat();
-    double DataToDouble();
+  
     
     
     char StartByte;
     char Length;
-    char Type;
+    unsigned char Type;
     char *Data;
     char EndByte;
     

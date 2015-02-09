@@ -11,13 +11,15 @@ class MessageProcessor
     MessageProcessor(UdpService *udpService);
     
     //Receives a standart min. 5Byte Message
-    Message ReceiveMessage();
+    Message * ReceiveMessage();
     
   private:
   UdpService *udpService;
   char endByte = 0xDE;
   char startByte = 0x01;
-  int my_atoi(const char *s);
+  Message *rMessage;
+  Message *erMessage;
+  int _length;
 };
 
 
